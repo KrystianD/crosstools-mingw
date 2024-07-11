@@ -1,0 +1,14 @@
+--- mingw-w64-headers/crt/_mingw.h.in	2021-10-29 06:01:02.033125208 +0200
++++ mingw-w64-headers/crt/_mingw.h.in	2021-10-29 06:00:47.213000000 +0200
+@@ -420,10 +420,8 @@
+  * printf ll modifier (unsupported by msvcrt.dll) is required by C99 and C++11 standards. */
+ #if (defined (_POSIX) || defined (_POSIX_SOURCE) || defined (_POSIX_C_SOURCE) \
+      || defined (_ISOC99_SOURCE) \
+-     || (defined (__STDC_VERSION__) && __STDC_VERSION__ >= 199901L && __MSVCRT_VERSION__ < 0xE00) \
+-     || (defined (__cplusplus) && __cplusplus >= 201103L && __MSVCRT_VERSION__ < 0xE00) \
+      || defined (_XOPEN_SOURCE) || defined (_XOPEN_SOURCE_EXTENDED) \
+-     || defined (_GNU_SOURCE) \
++     || (defined (_GNU_SOURCE) && defined (__cplusplus)) \
+      || defined (_SVID_SOURCE)) \
+     && !defined(__USE_MINGW_ANSI_STDIO)
+ /* Enable __USE_MINGW_ANSI_STDIO if user did _not_ specify it explicitly... */
