@@ -13,7 +13,7 @@ ARG TARGETS="i686-w64-mingw32 x86_64-w64-mingw32"
 
 WORKDIR /root
 
-ARG BINUTILS_VERSION=2.32
+ARG BINUTILS_VERSION=2.37
 
 SHELL ["/bin/bash", "-c"]
 
@@ -40,7 +40,7 @@ RUN mkdir binutils && cd binutils && \
     rm -rf /root/binutils
 
 # mingw-w64-headers
-ARG MINGW_VERSION=6.0.0
+ARG MINGW_VERSION=9.0.0
 
 RUN mkdir headers && cd headers && \
     wget https://sourceforge.net/projects/mingw-w64/files/mingw-w64/mingw-w64-release/mingw-w64-v${MINGW_VERSION}.tar.bz2 && \
@@ -59,7 +59,7 @@ RUN mkdir headers && cd headers && \
     rm -rf /root/headers
 
 # gcc bootstrap
-ARG GCC_VERSION=9.1.0
+ARG GCC_VERSION=10.3.0
 
 RUN mkdir gcc-base && cd gcc-base && \
     wget https://ftp.gnu.org/gnu/gcc/gcc-${GCC_VERSION}/gcc-${GCC_VERSION}.tar.xz && \
@@ -82,9 +82,12 @@ RUN mkdir gcc-base && cd gcc-base && \
     rm -rf /root/gcc-base
 
 # mingw-w64-crt
+COPY mingw-w64-crt.patch /
 RUN mkdir crt && cd crt && \
     wget https://sourceforge.net/projects/mingw-w64/files/mingw-w64/mingw-w64-release/mingw-w64-v${MINGW_VERSION}.tar.bz2 && \
     tar -xf mingw-w64-v${MINGW_VERSION}.tar.bz2 && \
+    (cd mingw-w64-v${MINGW_VERSION}/ && \
+        patch -p0 < /mingw-w64-crt.patch) && \
     for target in $TARGETS; do \
         (mkdir build-${target} && cd build-${target} && \
          if [ ${target} == "i686-w64-mingw32" ]; then \
@@ -123,7 +126,12 @@ RUN mkdir winpthreads && cd winpthreads && \
 RUN mkdir gcc && cd gcc && \
     wget https://ftp.gnu.org/gnu/gcc/gcc-${GCC_VERSION}/gcc-${GCC_VERSION}.tar.xz && \
     tar -xf gcc-${GCC_VERSION}.tar.xz && \
-    (cd gcc-${GCC_VERSION} && ./contrib/download_prerequisites) && \
+    (cd gcc-${GCC_VERSION} && ./contrib/download_prerequisites)
+
+COPY 0020-libgomp-Don-t-hard-code-MS-printf-attributes.patch /
+RUN cd gcc/gcc-${GCC_VERSION} && \
+    patch -p1 < /0020-libgomp-Don-t-hard-code-MS-printf-attributes.patch
+RUN cd gcc && \
     for target in $TARGETS; do \
         (mkdir build-${target} && cd build-${target} && \
          ../gcc-${GCC_VERSION}/configure --prefix=/usr/ \
@@ -156,6 +164,7 @@ RUN mkdir cmake && cd cmake && \
 # peldd
 RUN mkdir peldd && cd peldd && \
     git clone --recursive https://github.com/gsauthof/pe-util.git . && \
+    git checkout 5b07cb3586a1da687a2c5845f1207e054e74c5cd && \
     cmake . && \
     make install && \
     rm -rf /root/peldd
